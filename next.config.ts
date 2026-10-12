@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: ["pg", "@electric-sql/pglite"],
   poweredByHeader: false,
+  // Dev-only: lets `next dev` serve its assets through a Cloudflare Quick Tunnel for on-device AR testing.
+  allowedDevOrigins: ["*.trycloudflare.com"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "cdn.polyhaven.com" },

@@ -1,0 +1,21 @@
+# Automatic HTTPS (Let's Encrypt) for $DOMAIN. HTTPS is required for AR (WebXR needs a secure context).
+{$DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# Dish models can be up to 50 MB.
+	request_body {
+		max_size 60MB
+	}
+
+	reverse_proxy app:3000 {
+		# Never buffer: the kitchen display uses Server-Sent Events (/api/orders/stream).
+		flush_interval -1
+	}
+}

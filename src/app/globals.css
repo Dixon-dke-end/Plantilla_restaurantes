@@ -1,26 +1,315 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Design tokens. Components only use these semantic colors, so the staff area can re-skin
+ * itself to a dark theme by overriding the variables on `.theme-staff`.
+ */
+@theme {
+  --color-paper: #f7f4ee;
+  --color-surface: #ffffff;
+  --color-ink: #1b1a17;
+  --color-muted: #6b665e;
+  --color-line: #e6e0d6;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-accent: #b4532a;
+  --color-accent-strong: #94401f;
+  --color-accent-soft: #f4e4da;
+  --color-on-accent: #ffffff;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --color-olive: #5b6b4e;
+  --color-olive-soft: #e6ebdf;
+  --color-amber: #c98a1b;
+  --color-amber-ink: #7a5200;
+  --color-amber-soft: #f8ebd0;
+  --color-red: #b3261e;
+  --color-red-soft: #f6dad7;
+  --color-on-red: #ffffff;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+
+  --radius-control: 10px;
+  --radius-card: 14px;
+
+  --animate-flash-in: flash-in 1.6s ease-out 1;
+  --animate-fade-up: fade-up 220ms ease-out 1;
+  --animate-fade-in: fade-in 180ms ease-out 1;
+
+  @keyframes flash-in {
+    0% {
+      box-shadow: 0 0 0 3px var(--color-accent);
+      transform: translateY(-4px);
+    }
+    100% {
+      box-shadow: 0 0 0 0 transparent;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 }
 
+.theme-staff {
+  --color-paper: #121212;
+  --color-surface: #1c1c1c;
+  --color-ink: #f2f2f2;
+  --color-muted: #a3a3a3;
+  --color-line: #2a2a2a;
+
+  --color-accent: #e07a4b;
+  --color-accent-strong: #ee9468;
+  --color-accent-soft: #3a2519;
+  --color-on-accent: #1a0e08;
+
+  --color-olive: #8fb07a;
+  --color-olive-soft: #1f2a1a;
+  --color-amber: #e3ae45;
+  --color-amber-ink: #f0c36a;
+  --color-amber-soft: #332708;
+  --color-red: #f07167;
+  --color-red-soft: #3d1a17;
+  --color-on-red: #1f0705;
+
+  color-scheme: dark;
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+
+dialog {
+  color: var(--color-ink);
+}
+
+dialog::backdrop {
+  background: rgb(18 18 18 / 0.55);
+  backdrop-filter: blur(2px);
+}
+
+model-viewer {
+  --poster-color: transparent;
+  --progress-bar-color: var(--color-accent);
+}
+
+/*
+ * Motion. Everything below is native CSS (no animation library) and customer-facing only:
+ * /staff (KDS) and the admin tables never use these classes, so they stay instant.
+ * Timing: 400-600ms, ease-out, small distances, no bounce.
+ */
+:root {
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --reveal-distance: 20px;
+  --motion-medium: 450ms;
+  --motion-slow: 550ms;
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(var(--reveal-distance));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reveal-media {
+  from {
+    opacity: 0;
+    transform: translateY(var(--reveal-distance)) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* One-time entrance for the hero, played on load (not scroll-driven). */
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in {
+    animation: hero-in var(--motion-slow) var(--ease-out) both;
+    animation-delay: calc(var(--hero-i, 0) * 90ms);
+  }
+}
+
+/*
+ * Scroll reveal with CSS scroll-driven animations. Content is static (fully visible) in browsers
+ * without `animation-timeline`, and for visitors who prefer reduced motion.
+ *
+ * The range starts when the element's top edge enters the viewport and ends when it has fully
+ * entered, capped at 420px of scroll. (`entry 0% cover 30%` can never finish for elements near the
+ * end of the page, such as the footer, and leaves tall sections half-faded; this variant always
+ * completes and anything already on screen at load is shown in its final state.)
+ * `--reveal-i` staggers siblings by moving the start of their range.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal,
+    .reveal-stagger > * {
+      animation-name: reveal-up;
+      animation-duration: 1ms; /* ignored by scroll timelines; keeps older engines valid */
+      animation-timing-function: var(--ease-out);
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range-start: entry calc(var(--reveal-i, 0) * 10%);
+      animation-range-end: entry min(100%, 420px);
+    }
+
+    .reveal-media {
+      animation-name: reveal-media;
+    }
+
+    .reveal-stagger > :nth-child(4n + 2) {
+      --reveal-i: 1;
+    }
+    .reveal-stagger > :nth-child(4n + 3) {
+      --reveal-i: 2;
+    }
+    .reveal-stagger > :nth-child(4n + 4) {
+      --reveal-i: 3;
+    }
+  }
+}
+
+/*
+ * View transitions (React <ViewTransition> + browser View Transitions API, enabled by Next 16 route
+ * navigations). Unsupported browsers simply navigate without animation.
+ */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(*) {
+  animation-duration: var(--motion-medium);
+  animation-timing-function: var(--ease-out);
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Page content: previous page fades out quickly, the next one eases in. */
+::view-transition-old(.page-out) {
+  animation: 200ms var(--ease-out) both vt-fade-out;
+}
+::view-transition-new(.page-in) {
+  animation: var(--motion-medium) var(--ease-out) 120ms both vt-rise-in;
+}
+
+/* Dish image: card thumbnail morphs into the dish viewer. */
+::view-transition-group(.morph) {
+  animation-duration: var(--motion-slow);
+  animation-timing-function: var(--ease-out);
+}
+::view-transition-old(.morph),
+::view-transition-new(.morph) {
+  animation-duration: var(--motion-slow);
+  animation-timing-function: var(--ease-out);
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The sticky header stays put while the page content changes. */
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Pseudo-elements of a view transition are not matched by `*`. Zero-length keeps the final state. */
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
 }

@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getDb } from "@/server/db/client";
 import { account, session, user, verification } from "@/server/db/schema";
+import { resolveTrustedOrigins } from "./trustedOrigins";
 
 type Auth = ReturnType<typeof createAuth>;
 type Globals = typeof globalThis & { __emberAuth?: Promise<Auth> };
@@ -12,7 +13,7 @@ function createAuth(db: Awaited<ReturnType<typeof getDb>>) {
     database: drizzleAdapter(db, { provider: "pg", schema: { user, session, account, verification } }),
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL,
-    trustedOrigins: baseURL ? [baseURL] : undefined,
+    trustedOrigins: resolveTrustedOrigins({ baseURL, nodeEnv: process.env.NODE_ENV }),
     emailAndPassword: {
       enabled: true,
       // Customers order without accounts; staff accounts are created by an admin.
